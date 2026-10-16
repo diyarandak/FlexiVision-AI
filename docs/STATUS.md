@@ -1,10 +1,10 @@
 # Güncel durum
 
-## 16 Ekim: GitHub ilk yükleme hazırlığı
+## 16 Ekim: GitHub ilk yükleme tamamlandı
 
 - Kullanıcının istediği `diyarandak/FlexiVision-AI` deposu boş olarak doğrulandı; yerel Git deposu `main` dalında oluşturuldu.
-- Kaynak kod, testler, CI ve belgeler ilk commit için hazırlandı. Yerel videolar, vücut verileri, ortam dosyaları, model ağırlıkları ve derleme çıktıları `.gitignore` kapsamındadır. README mevcut özellikler ve son doğrulama durumuyla güncellendi.
-- Bu adımda uygulama kodu değişmedi; önceki 398 testlik doğrulama geçerlidir. Sonraki adım ilk commit'i GitHub'a göndermek ve uzak dalın commit kimliğini doğrulamak.
+- Kaynak kod, testler, CI ve belgeler dahil 230 dosya `bd6463b` ilk commit'iyle GitHub `main` dalına gönderildi; yerel dal `origin/main` izliyor. Yerel videolar, vücut verileri, ortam dosyaları, model ağırlıkları ve derleme çıktıları `.gitignore` kapsamındadır. README mevcut özellikler ve son doğrulama durumuyla güncellendi.
+- Bu adımda uygulama kodu değişmedi; önceki 398 testlik doğrulama geçerlidir. GitHub Actions sonucu bu adımda doğrulanmadı. Sonraki ürün doğrulaması gerçek Android ses/kamera denemesidir.
 
 ## 16 Ekim: gerçek Android raporlarında sessiz düzeltme — Firebase Hosting’de yayında
 
