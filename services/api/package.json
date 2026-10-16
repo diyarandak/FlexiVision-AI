@@ -1,0 +1,12 @@
+{
+  "name": "@flexivision/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --env-file-if-exists=../../.env --import tsx --watch src/server.ts",
+    "build": "esbuild src/server.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/server.js",
+    "start": "node dist/server.js"
+  },
+  "dependencies": { "@flexivision/contracts": "*" }
+}

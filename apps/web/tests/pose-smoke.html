@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="tr"><meta charset="utf-8"><title>FlexiVision yerel model testi</title>
+<body><h1>Yerel test videosu</h1><p>Google poz görselinden 4 saniyelik sabit görüntü videosu üretir. Gerçek egzersiz doğruluğunu test etmez.</p>
+<button id="create">Poz videosu oluştur</button><button id="empty">Boş video oluştur</button><p id="status">Hazır</p><a id="download" hidden>Videoyu indir</a>
+<button id="analyze" disabled>Analizi test et</button><button id="cancel" disabled>Testi iptal et</button><pre id="result"></pre>
+<button id="worker">Gerçek model başlangıcını test et</button><pre id="worker-result"></pre>
+<button id="camera-pipeline">Canlı kamera hattını test et</button>
+<label><input id="pending-play" type="checkbox">Oynatma yanıtı takılı kalsın (test)</label>
+<video id="pipeline-video" muted playsinline width="320" height="240"></video><pre id="pipeline-result"></pre>
+<canvas id="canvas" width="640" height="480"></canvas>
+<script type="module">
+import { ExtractReferenceMap } from '@flexivision/application';
+import { BrowserPoseExtractor } from '../src/adapters/browserPoseExtractor.ts';
+import { PoseWorkerClient } from '../src/adapters/poseWorkerClient.ts';
+import { BrowserCameraPose, browserCameraDependencies } from '../src/adapters/browserCameraPose.ts';
+let fixtureUrl = '', task = null;
+const canvas = document.querySelector('canvas');
+const status = document.querySelector('#status');
+const ctx = canvas.getContext('2d');
+async function record(usePose) {
+ document.querySelectorAll('button').forEach(button => button.disabled = true);
+ status.textContent = 'Video hazırlanıyor';
+ const img = new Image(); img.src = './fixtures/pose.jpg'; if (usePose) await img.decode();
+ const draw = () => { ctx.fillStyle = '#eceee9'; ctx.fillRect(0,0,640,480); if(usePose) ctx.drawImage(img,0,0,640,480); };
+ draw();
+ const stream = canvas.captureStream(10);
+ const mimeType = ['video/webm;codecs=vp8','video/mp4'].find(type => MediaRecorder.isTypeSupported(type));
+ const recorder = new MediaRecorder(stream, {mimeType});
+ const chunks = [];
+ recorder.ondataavailable = event => { if(event.data.size) chunks.push(event.data); };
+ recorder.onstop = () => {
+  clearInterval(timer); stream.getTracks().forEach(track => track.stop());
+  const link = document.querySelector('#download');
+  if(link.href.startsWith('blob:')) URL.revokeObjectURL(link.href);
+  link.href = URL.createObjectURL(new Blob(chunks, {type: recorder.mimeType}));
+  fixtureUrl = link.href;
+  link.download = (usePose ? 'static-pose-test' : 'no-person-test') + (recorder.mimeType.includes('webm') ? '.webm' : '.mp4');
+  link.hidden = false; status.textContent = 'Video hazır';
+  document.querySelectorAll('button').forEach(button => button.disabled = false);
+ };
+ const timer = setInterval(draw,100);
+ recorder.start(); setTimeout(() => recorder.stop(),4000);
+}
+document.querySelector('#create').onclick = () => record(true).catch(error => status.textContent = error.message);
+document.querySelector('#empty').onclick = () => record(false).catch(error => status.textContent = error.message);
+document.querySelector('#analyze').onclick = async () => {
+ task = new ExtractReferenceMap(new BrowserPoseExtractor());
+ document.querySelector('#cancel').disabled = false;
+ document.querySelector('#result').textContent = '';
+ try {
+  const map = await task.execute({uri: fixtureUrl, name:'synthetic-static-test'}, progress => status.textContent = `${progress.stage}: ${progress.completed}/${progress.total}`);
+  status.textContent = 'Analiz tamamlandı';
+  document.querySelector('#result').textContent = JSON.stringify({status:map.status, quality:map.quality, ranges:map.ranges, landmarkCount:map.sequence.frames[0]?.people[0]?.landmarks.length},null,2);
+ } catch(error) { status.textContent = error.message || 'İptal edildi'; }
+ finally { document.querySelector('#cancel').disabled = true; task = null; }
+};
+document.querySelector('#cancel').onclick = () => task?.cancel();
+document.querySelector('#worker').onclick = async () => {
+ const output=document.querySelector('#worker-result'), detector=new PoseWorkerClient(), start=performance.now();
+ const log=text=>{output.textContent+=`${Math.round(performance.now()-start)} ms: ${text}\n`;};
+ output.textContent=''; log('Model yükleniyor');
+ try {
+  await detector.initialize(); log('Model hazır');
+  const img=new Image(); img.src='./fixtures/pose.jpg'; await img.decode();
+  ctx.drawImage(img,0,0,640,480);
+  for(let index=0;index<3;index++) {
+   const frame=await detector.detect(await createImageBitmap(canvas),performance.now());
+   log(`Kare ${index+1}: ${frame.people.length} poz adayı; ${frame.people[0]?.landmarks.length ?? 0} eklem`);
+  }
+  log('TEST TAMAMLANDI');
+ } catch(error) { log(`HATA: ${error.message}`); } finally {detector.cancel();}
+};
+document.querySelector('#camera-pipeline').onclick = async () => {
+ const output=document.querySelector('#pipeline-result'), video=document.querySelector('#pipeline-video');
+ const started=performance.now(), log=text=>{output.textContent+=`${Math.round(performance.now()-started)} ms: ${text}\n`;};
+ const nativePlay=video.play.bind(video); let timer, stream, source;
+ output.textContent=''; document.querySelector('#camera-pipeline').disabled=true;
+ try {
+  const img=new Image(); img.src='./fixtures/pose.jpg'; await img.decode();
+  const draw=()=>ctx.drawImage(img,0,0,640,480); draw(); timer=setInterval(draw,100);
+  stream=canvas.captureStream(10);
+  if(document.querySelector('#pending-play').checked) video.play=()=>{void nativePlay();return new Promise(()=>{});};
+  source=new BrowserCameraPose(video,{...browserCameraDependencies,getUserMedia:async()=>stream},undefined,stage=>log(stage));
+  let count=0;
+  await new Promise((resolve,reject)=>{void source.start(reading=>{
+   log(`Kare ${++count}: ${reading.frame.people.length} poz adayı`);
+   if(count===3){source.stop();resolve();}
+  },reject);});
+  log('CANLI HAT TESTİ TAMAMLANDI');
+ } catch(error){log(`HATA: ${error.message}`);} finally {
+  source?.stop(); stream?.getTracks().forEach(track=>track.stop()); clearInterval(timer); video.play=nativePlay;
+  document.querySelector('#camera-pipeline').disabled=false;
+ }
+};
+</script></body></html>

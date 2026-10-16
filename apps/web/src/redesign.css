@@ -1,0 +1,913 @@
+/* A compact task flow layered over the existing camera and report components. */
+:root {
+  --ink:#18382f;
+  --muted:#60756b;
+  --line:#dce6dc;
+  --green:#205d47;
+  --soft:#eaf3e3;
+  --white:#fff;
+  background:#f7f8f3;
+  color:var(--ink);
+  line-height:1.48
+}
+body { background:radial-gradient(circle at 95% 0%,#eaf5e5 0,transparent 34rem),#f7f8f3 }
+h1,h2,h3 { letter-spacing:-.035em }
+.app-shell { max-width:1120px; padding:0 32px }
+.topbar { height:72px; border-color:#e2eae0 }
+.brand { font-size:22px; letter-spacing:-.045em }
+.brand-mark { width:38px; height:38px; border-radius:13px; background:#143b2b; color:#d9f6aa; font-weight:800 }
+.demo-account { position:relative; font-size:12px; color:var(--muted) }
+.demo-account summary { min-height:44px; display:flex; align-items:center; gap:7px; padding:7px 12px; border:1px solid var(--line); border-radius:999px; background:#fff }
+.demo-account summary::after { content:'⌄'; float:none; margin:0; font-size:15px }
+.demo-account[open] summary::after { content:'⌃' }
+.demo-account>.text-button { position:absolute; right:0; top:48px; z-index:30; min-width:130px; padding:12px; text-align:left; color:var(--ink); text-decoration:none; background:#fff; border:1px solid var(--line); border-radius:12px; box-shadow:0 12px 30px #163e291c }
+.app-navigation { top:0; padding:8px 0; background:#f7f8f3ee; border-color:var(--line) }
+.app-navigation a { border-radius:11px; padding:10px 17px; font-size:13px }
+.app-navigation a[aria-current=page] { background:#e1edda; color:#194b37 }
+.local-account-note { padding-top:14px; font-size:11px; color:#708178 }
+.section-heading { padding:24px 0 21px }
+.section-heading h1 { font-size:clamp(30px,4vw,44px); letter-spacing:-.06em }
+.section-heading>p:last-child { margin-top:7px; max-width:580px; font-size:14px; line-height:1.55 }
+.eyebrow { color:#698275; letter-spacing:.16em; font-size:10px }
+.card { border-radius:22px; border-color:var(--line); box-shadow:0 10px 32px #173a2510 }
+.primary-button { border-radius:13px; min-height:54px; font-size:15px; background:var(--green); box-shadow:none }
+.primary-button:hover:enabled { background:#174c39 }
+.secondary-button { background:#f4f8f0; border-color:#d7e3d3; color:#315947 }
+.text-button { color:#356b51 }
+.message { background:#eef5e9; border-color:#dce9d6 }
+.local-badge { border-color:#dce7dc; background:#f5faf3; color:#3f7057 }
+
+/* Profile: one next action, with maintenance controls kept in a disclosure. */
+.body-profile-card { align-items:center; padding:34px; background:linear-gradient(115deg,#194734,#28694e); border:0; color:#fff; box-shadow:0 22px 45px #153e3030 }
+.body-profile-card .eyebrow { color:#b8debf }
+.body-profile-card h2 { font-size:clamp(29px,3.6vw,40px); line-height:1.12 }
+.body-profile-card p:not(.eyebrow) { color:#e0f0e3; max-width:500px; font-size:15px; line-height:1.55 }
+.body-profile-actions { width:240px }
+.body-profile-actions .body-primary-action { background:#daf3ae; color:#17392a; margin:0; font-weight:750 }
+.body-profile-actions .body-primary-action:hover:enabled { background:#c5eb91 }
+.profile-manage-menu { margin-top:12px; border:0; text-align:center }
+.profile-manage-menu summary { display:inline-flex; align-items:center; min-height:44px; color:#e1f0df; font-size:13px }
+.profile-manage-menu summary::after { color:#e1f0df }
+.profile-manage-content { padding:14px; margin-top:5px; text-align:left; background:#fff; color:var(--ink); border-radius:13px }
+.profile-manage-content small { color:var(--muted); margin:0 0 8px }
+.profile-manage-content .secondary-button { width:100%; margin-top:8px }
+.profile-manage-content .text-button { margin:8px 0 0 }
+.body-profile-details { box-shadow:none }
+.body-profile-diagram { background:#e9f2e4; color:#2c7352 }
+
+/* Exercise list and the optional video composer. */
+.exercise-heading-row { display:flex; align-items:center; justify-content:space-between; gap:16px }
+.add-exercise-button { margin:0; white-space:nowrap; background:#fff; font-weight:700 }
+.reference-library { margin-bottom:18px; box-shadow:none }
+.reference-library .card-heading { margin-bottom:0 }
+.reference-library h2 { font-size:23px }
+.library-empty-state { margin-top:10px; color:var(--muted) }
+.exercise-grid { gap:12px; margin-top:17px }
+.exercise-tile { position:relative; min-height:180px; background:#f4f8f1; border-color:#dfebdb; padding:20px; overflow:visible }
+.exercise-glyph { width:38px; height:38px; border-radius:11px; background:#e0edda; color:#32694a; font-size:21px }
+.exercise-tile-header { padding-right:35px; gap:12px }
+.exercise-tile h3 { font-size:19px; line-height:1.2 }
+.exercise-tile .exercise-start-action { width:100%; margin-top:20px; min-height:46px; padding:10px 15px }
+.exercise-video-action { display:block; min-height:40px; margin:5px 0 0; padding:5px 2px; border:0; background:transparent; color:#24543c; font:inherit; font-size:13px; font-weight:700; text-decoration:underline; text-underline-offset:3px; cursor:pointer }
+.exercise-video-action:disabled { opacity:.55; cursor:default }
+.exercise-video-status { margin:12px 0 0; color:var(--muted); font-size:12px; line-height:1.45 }
+.exercise-video-error { margin:8px 0 0 }
+.exercise-more-menu { position:absolute; top:13px; right:12px; border:0; margin:0; padding:0 }
+.exercise-more-menu summary { display:grid; place-items:center; width:44px; height:44px; border:1px solid #dce8d9; border-radius:11px; background:#fff; color:#385947; font-size:23px; line-height:1 }
+.exercise-more-menu summary::after { display:none }
+.exercise-more-menu[open] { position:static; margin-top:14px }
+.exercise-more-menu[open] summary { position:absolute; top:13px; right:12px }
+.exercise-more-menu .history-detail { position:static; width:100%; padding:14px; border:1px solid var(--line); border-radius:14px; background:#fff; box-shadow:0 16px 38px #153b2b25 }
+.exercise-more-menu .implementation-note { margin-top:0 }
+.library-more-menu { margin-top:15px; border-top:1px solid var(--line); padding-top:10px }
+.library-more-menu summary { min-height:36px; display:flex; align-items:center }
+.workspace { display:grid; grid-template-columns:minmax(0,1fr); max-width:850px; margin:0 auto 24px; gap:12px }
+.upload-card { padding:29px }
+.upload-card .card-heading { margin-bottom:10px }
+.upload-lead { max-width:620px; margin:0 0 15px; font-size:14px; line-height:1.55; color:var(--muted) }
+.reference-options { border:1px solid var(--line); border-radius:12px; background:#fbfdf9; padding:0 15px; margin-bottom:15px }
+.reference-options>summary { min-height:48px; display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:13px }
+.reference-options>summary span { margin-left:auto; color:#63816d; font-weight:500; font-size:11px; white-space:nowrap }
+.reference-options>summary::after { float:none; order:3; margin:0 }
+.reference-options[open] { padding-bottom:15px }
+.reference-options .reference-mode { margin:10px 0 0 }
+.reference-options .reference-mode label { background:#fff }
+.reference-options .reference-detail { margin-top:13px }
+.upload-area { min-height:152px; gap:5px; padding:17px; background:#f5faf2; border-color:#a8c9ae; border-radius:16px }
+.upload-area.has-file { min-height:72px; flex-direction:row; justify-content:center; gap:10px }
+.upload-area strong { font-size:15px }
+.upload-area>span:last-of-type { font-size:11px }
+.upload-icon { width:38px; height:38px; margin:0 0 5px; border-radius:10px; background:#e4f2df; font-size:22px }
+.preview { margin-top:14px }
+.file-info { font-size:11px }
+.analyze-button { margin-top:14px }
+.tips-card { box-shadow:none; padding:16px 20px; background:#f1f5ed }
+.tips-card summary { min-height:34px; display:flex; align-items:center; font-size:13px }
+.tips-card ul { margin-top:10px; gap:12px }
+
+/* One result and one main action; data and alternate choices remain available. */
+.motion-results { margin-top:20px; padding-top:19px }
+.motion-results>h2 { font-size:21px }
+.qualification-card { margin-top:12px; padding:19px; border-radius:15px }
+.qualification-card.accepted { background:#edf7e8; border-color:#cee3c4 }
+.qualification-card h3 { font-size:19px }
+.qualification-desc { line-height:1.5 }
+.template-panel { margin-top:20px }
+.template-heading h2 { font-size:21px }
+.template-panel>.result-explanation { margin-top:8px }
+.template-panel .pace-note { margin-top:8px }
+.template-primary-action { margin-top:16px; font-size:16px }
+.template-save-note { margin-top:8px; color:var(--muted); font-size:12px }
+.template-more-options,.analysis-details { margin-top:16px; padding-top:12px }
+.template-more-options>summary,.analysis-details>summary { min-height:38px; display:flex; align-items:center; font-size:13px; color:#35634a }
+.template-more-options .reference-name-form { margin-top:15px }
+.template-panel>.implementation-note { font-size:12px; line-height:1.5 }
+.session-history { box-shadow:none }
+.history-entry summary { background:#f7faf5 }
+
+/* Demo entry uses the same single-action language as the signed-in screens. */
+.demo-login-shell { max-width:none; min-height:100dvh; background:radial-gradient(circle at 85% 15%,#e6f4df,transparent 34rem),#f7f8f3 }
+.demo-login-shell>.brand,.demo-login-shell>footer { width:min(100%,1120px); margin-inline:auto }
+.demo-login-card { position:relative; overflow:hidden; width:min(100%,740px); margin:7vh auto; padding:clamp(30px,5vw,60px); border:0; border-radius:30px; color:#fff; background:linear-gradient(125deg,#163a2b,#28684c); box-shadow:0 35px 75px #163d2d2e }
+.demo-login-card::after { content:''; position:absolute; right:-92px; top:-100px; width:380px; height:380px; border:1px solid #c9e8bd55; border-radius:50%; box-shadow:0 0 0 45px #c9e8bd12,0 0 0 100px #c9e8bd0a; pointer-events:none }
+.demo-login-card>* { position:relative; z-index:1 }
+.demo-login-card .local-badge { margin-bottom:28px; background:#e2f3d6; color:#24583a; border:0 }
+.demo-login-card .eyebrow { color:#bae0bd }
+.demo-login-card h1 { max-width:640px; font-size:clamp(42px,6vw,67px); line-height:1.03 }
+.demo-login-card h1 span { color:#d8f5a5 }
+.demo-login-card>p:not(.eyebrow) { max-width:500px; margin-top:23px; color:#e0eee2; line-height:1.6 }
+.demo-login-card .primary-button { max-width:330px; margin-top:30px; background:#dbf3af; color:#18392a; font-weight:750 }
+.demo-login-card .primary-button:hover:enabled { background:#cbed9d }
+.demo-login-card .demo-login-note { max-width:580px; color:#c8dfcf!important; font-size:12px!important }
+
+/* Camera first once a session is running. */
+.body-scan-dialog,.live-exercise-dialog { background:#f6f8f3 }
+.scan-settings,.live-setup-options,.live-more-options { flex-shrink:0; padding:0 15px; border:1px solid var(--line); border-radius:12px; background:#fff }
+.scan-settings>summary,.live-setup-options>summary,.live-more-options>summary { display:flex; align-items:center; min-height:48px; color:#365b46; font-size:13px }
+.scan-settings>.camera-settings,.live-setup-options>.camera-settings { margin:0 0 15px; border:0; border-top:1px solid var(--line); border-radius:0; padding:15px 0 0 }
+.live-setup-options>.voice-test-button { margin-bottom:15px }
+.live-more-options { padding-bottom:0 }
+.live-more-options[open] { padding-bottom:14px }
+.live-more-options>.camera-lens-controls,.live-more-options>.voice-controls,.live-more-options>.session-info,.live-more-options>.camera-timing,.live-more-options>.angles-card { margin:0; border-top:1px solid var(--line); border-radius:0; background:none }
+.mobile-phase { display:none }
+.live-exercise-dialog:not(.camera-running) .live-views { display:none }
+.body-scan-dialog:not(.camera-running) .scan-camera-area { display:none }
+.body-scan-dialog:not(.camera-running) .body-scan-views { display:block }
+.body-scan-dialog:not(.camera-running) .body-pose-hint { max-width:540px; margin:auto }
+.generic-live-dialog.camera-running .generic-start-card { padding:9px 12px }
+.generic-live-dialog.camera-running .generic-start-card p:not(.eyebrow) { display:none }
+.generic-live-dialog.camera-running .generic-start-pose { width:62px; height:66px }
+.camera-running .live-guidance-box { min-height:64px; font-size:16px }
+.camera-running .live-guidance-box p { font-size:16px; line-height:1.4 }
+.camera-running .rep-counter-card { background:#214b38; color:#fff }
+.camera-running .rep-counter-card .hud-label { color:#c9e2cc }
+.camera-running .rep-number { font-size:58px }
+.live-exercise-dialog.camera-running .live-bottom-bar { position:fixed; left:0; right:0; bottom:0; z-index:105; padding:10px max(18px,calc((100vw - 620px)/2)) calc(10px + env(safe-area-inset-bottom)); background:#f6f8f3ee; border-top:1px solid var(--line); backdrop-filter:blur(14px) }
+.live-exercise-dialog.camera-running { padding-bottom:calc(100px + env(safe-area-inset-bottom)) }
+.live-exercise-dialog.camera-running .stop-exercise-btn { width:100%; max-width:none; margin:0; min-height:50px }
+.body-scan-dialog.camera-running .scan-bottom .template-actions { position:fixed; left:0; right:0; bottom:0; z-index:105; margin:0; padding:10px max(18px,calc((100vw - 620px)/2)) calc(10px + env(safe-area-inset-bottom)); background:#f6f8f3ee; border-top:1px solid var(--line); backdrop-filter:blur(14px) }
+.body-scan-dialog.camera-running .scan-bottom .template-actions .secondary-button { width:100%; min-height:48px }
+.body-scan-dialog.camera-running { padding-bottom:calc(100px + env(safe-area-inset-bottom)) }
+.body-scan-dialog.camera-running .body-scan-guidance h3 { font-size:clamp(34px,5vw,52px); line-height:1.1 }
+.body-scan-dialog.camera-running .body-scan-guidance p { font-size:18px; line-height:1.35 }
+
+@media(max-width:800px) {
+  .workspace { max-width:none }
+  .body-profile-card { flex-direction:column; align-items:stretch; gap:20px }
+  .body-profile-actions { width:100% }
+}
+@media(max-width:899px) {
+  .live-exercise-dialog.camera-running .live-views:not(.preparing) { position:relative }
+  .live-exercise-dialog.camera-running .live-views:not(.preparing) .live-hud {
+    position:absolute; top:11px; left:11px; right:11px; z-index:2;
+    display:grid; grid-template-columns:76px minmax(0,1fr); gap:8px;
+    pointer-events:none
+  }
+  .live-exercise-dialog.camera-running .live-views:not(.preparing) .rep-counter-card { padding:9px 6px; border:1px solid #ffffff35; background:#123a2de8; border-radius:12px }
+  .live-exercise-dialog.camera-running .live-views:not(.preparing) .rep-number { font-size:45px }
+  .live-exercise-dialog.camera-running .live-views:not(.preparing) .hud-label { font-size:8px; margin-bottom:3px }
+  .live-exercise-dialog.camera-running .live-views:not(.preparing) .phase-card,
+  .live-exercise-dialog.camera-running .live-views:not(.preparing) .angles-card { display:none }
+  .live-exercise-dialog.camera-running .live-views:not(.preparing) .live-guidance-box { grid-column:2; min-height:88px; padding:9px 11px; background:#123a2de8; border-color:#ffffff35; color:#fff; align-items:flex-start; gap:7px; border-radius:12px }
+  .live-exercise-dialog.camera-running .live-views:not(.preparing) .live-guidance-box.warning { background:#823c22f2 }
+  .live-exercise-dialog.camera-running .live-views:not(.preparing) .live-guidance-box.unknown { background:#344d43ed }
+  .live-exercise-dialog.camera-running .live-views:not(.preparing) .live-guidance-box p { font-size:16px; line-height:1.25 }
+  .live-exercise-dialog.camera-running .live-views:not(.preparing) .mobile-phase { display:block; margin-bottom:4px; color:#d4ebd5; font-size:10px; font-weight:700; letter-spacing:.04em }
+  .live-exercise-dialog.camera-running .live-views:not(.preparing) .guidance-indicator { width:19px; height:19px; font-size:11px; color:#19372c }
+}
+@media(max-width:650px) {
+  .app-shell { padding:0 18px }
+  .has-app-nav { padding-bottom:86px }
+  .topbar { height:64px }
+  .brand { font-size:20px }
+  .brand-mark { width:34px; height:34px; font-size:24px }
+  .demo-account summary { padding:5px 10px; font-size:11px }
+  .app-navigation { top:auto; padding:7px 12px calc(8px + env(safe-area-inset-bottom)); gap:6px; background:#fffefa; box-shadow:0 -10px 30px #183c2514 }
+  .app-navigation a { padding:7px 4px; gap:3px; font-size:11px; border-radius:12px }
+  .app-navigation a[aria-current=page] { background:#e0f0d8; color:#1d593c }
+  .app-navigation a span { font-size:21px }
+  .local-account-note { padding-top:10px }
+  .section-heading { padding:20px 0 17px }
+  .section-heading h1 { font-size:34px }
+  .section-heading>p:last-child { font-size:13px; margin-top:6px }
+  .exercise-heading-row { align-items:flex-start }
+  .add-exercise-button { padding:8px 10px; min-height:40px; font-size:11px }
+  .card { border-radius:18px; padding:20px }
+  .body-profile-card { padding:26px; gap:20px; border-radius:22px }
+  .body-profile-card h2 { font-size:31px }
+  .body-profile-card p:not(.eyebrow) { font-size:14px }
+  .reference-library { margin-bottom:13px }
+  .exercise-grid { grid-template-columns:1fr; margin-top:12px }
+  .exercise-tile { padding:17px; min-height:160px }
+  .upload-card { padding:21px }
+  .upload-card .card-heading h2 { font-size:23px }
+  .upload-area { min-height:132px }
+  .upload-area.has-file { min-height:67px }
+  .reference-options>summary { font-size:12px }
+  .reference-options>summary span { font-size:10px }
+  .qualification-card { padding:17px }
+  .qualification-card h3 { font-size:18px }
+  .body-scan-dialog,.live-exercise-dialog { padding:14px 15px calc(100px + env(safe-area-inset-bottom)) }
+  .body-scan-guidance,.live-setup-guidance { padding:17px }
+  .body-scan-guidance h3,.live-setup-guidance h3 { font-size:27px }
+  .body-scan-dialog.camera-running .body-scan-guidance h3 { font-size:37px }
+  .body-scan-dialog.camera-running .body-scan-guidance p { font-size:16px }
+  .live-exercise-dialog.camera-running .camera-stage.natural-preview { width:100% }
+  .camera-running .live-hud { gap:8px }
+  .camera-running .live-guidance-box { padding:13px }
+  .camera-running .live-guidance-box p { font-size:16px }
+  .live-side-tag { font-size:10px }
+  .demo-login-shell { padding:18px }
+  .demo-login-card { margin:10vh auto 30px; padding:29px; border-radius:25px }
+  .demo-login-card::after { right:-220px; top:-170px }
+  .demo-login-card h1 { font-size:45px }
+  .demo-login-card .primary-button { max-width:none }
+}
+
+/* Live sessions use the camera as the canvas. Video and overlays share the chosen fit; an unsupported/uncertain comparison never gets a red segment. */
+.live-exercise-dialog.visual-live.camera-running {
+  display:block;
+  overflow:hidden;
+  padding:0;
+  background:#081712;
+  color:#f4fbf2;
+  isolation:isolate;
+}
+.visual-live.camera-running .live-views,
+.visual-live.camera-running .live-views:not(.preparing),
+.visual-live.camera-running .live-views.preparing {
+  position:absolute;
+  inset:0;
+  height:100%;
+  display:block;
+  min-height:0;
+  margin:0;
+}
+.visual-live.camera-running .live-camera-wrap {
+  position:absolute;
+  inset:0;
+}
+.visual-live.camera-running .live-camera-stage,
+.visual-live.camera-running .camera-stage,
+.visual-live.camera-running .camera-stage.natural-preview {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  min-height:0;
+  max-height:none;
+  border-radius:0;
+  background:#081712;
+}
+.visual-live.camera-running .camera-stage video { object-fit:contain }
+.visual-live.camera-running .camera-stage.tracking-uncertain .skeleton { filter:grayscale(1); opacity:.75 }
+.visual-live.camera-running .live-header {
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  z-index:6;
+  padding:calc(12px + env(safe-area-inset-top)) clamp(15px,3vw,34px) 26px;
+  align-items:flex-start;
+  color:#fff;
+  background:linear-gradient(180deg,#051912df 0%,#051912a8 65%,transparent 100%);
+}
+.visual-live.camera-running .live-header .eyebrow,
+.visual-live.camera-running .live-side-tag { color:#cce6d3 }
+.visual-live.camera-running .live-header h2 { color:#fff; font-size:clamp(18px,3vw,27px) }
+.visual-live.camera-running .scan-toolbar .secondary-button {
+  background:#183f33cc;
+  color:#fff;
+  border-color:#c6e2cc66;
+  backdrop-filter:blur(8px);
+}
+.visual-live.camera-running .live-hud,
+.visual-live.camera-running .live-views:not(.preparing) .live-hud {
+  position:absolute;
+  z-index:4;
+  top:calc(105px + env(safe-area-inset-top));
+  left:clamp(12px,3vw,34px);
+  right:clamp(12px,3vw,34px);
+  display:grid;
+  grid-template-columns:minmax(80px,105px) minmax(0,1fr);
+  gap:9px;
+  align-items:start;
+  pointer-events:none;
+}
+.visual-live.camera-running .rep-counter-card,
+.visual-live.camera-running .live-views:not(.preparing) .rep-counter-card {
+  padding:10px;
+  min-height:76px;
+  border:1px solid #d4f3da66;
+  border-radius:16px;
+  background:#09251dcc;
+  color:#fff;
+  backdrop-filter:blur(12px);
+}
+.visual-live.camera-running .rep-number,
+.visual-live.camera-running .live-views:not(.preparing) .rep-number { font-size:42px }
+.visual-live.camera-running .phase-card,
+.visual-live.camera-running .angles-card { display:none }
+.visual-live.camera-running .live-guidance-box,
+.visual-live.camera-running .live-views:not(.preparing) .live-guidance-box {
+  grid-column:2;
+  min-height:76px;
+  padding:11px 13px;
+  border-radius:16px;
+  border:1px solid #d4f3da66;
+  background:#09251dcc;
+  color:#fff;
+  backdrop-filter:blur(12px);
+}
+.visual-live.camera-running .live-guidance-box.warning,
+.visual-live.camera-running .live-views:not(.preparing) .live-guidance-box.warning { background:#87361deb; border-color:#ffba997a }
+.visual-live.camera-running .live-guidance-box.unknown,
+.visual-live.camera-running .live-views:not(.preparing) .live-guidance-box.unknown { background:#34483fdd; border-color:#d5e3d980 }
+.visual-live.camera-running .live-guidance-box p,
+.visual-live.camera-running .live-views:not(.preparing) .live-guidance-box p { font-size:clamp(14px,2.8vw,19px); line-height:1.28 }
+.visual-live.camera-running .mobile-phase { display:block; color:#d3efd5 }
+.visual-live.camera-running .camera-underbar {
+  position:absolute;
+  z-index:5;
+  right:clamp(12px,3vw,34px);
+  bottom:calc(89px + env(safe-area-inset-bottom));
+  padding:7px 11px;
+  border:1px solid #deefe47a;
+  border-radius:999px;
+  background:#09251dcc;
+  color:#e5f0e6;
+  backdrop-filter:blur(10px);
+}
+.visual-live.camera-running .camera-underbar>span { display:none }
+.visual-live.camera-running .mirror-option { color:#fff }
+.visual-live.camera-running .live-bottom-bar {
+  position:absolute;
+  z-index:7;
+  left:0;
+  right:0;
+  bottom:0;
+  padding:14px max(15px,calc((100vw - 560px)/2)) calc(14px + env(safe-area-inset-bottom));
+  border:0;
+  background:linear-gradient(0deg,#051912fa 0%,#051912d9 72%,transparent 100%);
+  backdrop-filter:none;
+}
+.visual-live.camera-running .stop-exercise-btn {
+  min-height:50px;
+  width:100%;
+  border:1px solid #e7f2e9aa;
+  background:#f5fbf1;
+  color:#173e2d;
+  font-weight:750;
+}
+.visual-live.camera-running .live-more-options {
+  position:absolute;
+  z-index:6;
+  left:clamp(12px,3vw,34px);
+  bottom:calc(91px + env(safe-area-inset-bottom));
+  width:min(330px,calc(100vw - 142px));
+  max-height:min(60dvh,470px);
+  overflow:auto;
+  border:1px solid #d7eadc80;
+  border-radius:14px;
+  background:#12352aeb;
+  color:#fff;
+  backdrop-filter:blur(15px);
+}
+.visual-live.camera-running .live-more-options>summary { min-height:42px; color:#fff }
+.visual-live.camera-running .live-more-options[open] { padding-bottom:12px }
+.visual-live.camera-running .live-more-options[open] :is(p,span,small,label,summary) { color:#e2efe5 }
+.visual-live.camera-running .live-setup-guidance,
+.visual-live.camera-running .generic-start-card {
+  position:absolute;
+  z-index:5;
+  left:clamp(12px,3vw,34px);
+  right:clamp(12px,3vw,34px);
+  bottom:calc(156px + env(safe-area-inset-bottom));
+  max-width:690px;
+  border:1px solid #d7eadc9c;
+  border-radius:18px;
+  background:#0a3024df;
+  color:#fff;
+  box-shadow:0 10px 36px #06181166;
+  backdrop-filter:blur(12px);
+}
+.visual-live.camera-running .live-setup-guidance h3,
+.visual-live.camera-running .generic-start-card h3 { color:#fff }
+.visual-live.camera-running .live-setup-guidance p,
+.visual-live.camera-running .generic-start-card p { color:#e4f3e6 }
+.visual-live.camera-running .camera-orientation-tip,
+.visual-live.camera-running>.message {
+  position:absolute;
+  z-index:8;
+  left:clamp(12px,3vw,34px);
+  right:clamp(12px,3vw,34px);
+  bottom:calc(150px + env(safe-area-inset-bottom));
+  margin:0 auto;
+  max-width:690px;
+}
+.visual-live.camera-running>.message {
+  padding:12px 14px;
+  border:1px solid #d7eadc99;
+  border-radius:13px;
+  background:#12352af2;
+  color:#fff;
+  box-shadow:0 8px 25px #06181155;
+}
+.visual-live.camera-running>.message.error { background:#87361df2; border-color:#ffba997a; color:#fff }
+.visual-live.camera-running.has-live-message .live-visual-legend,
+.visual-live.camera-running.has-live-message .generic-live-legend,
+.visual-live.camera-running.has-live-message .live-reference-readout,
+.visual-live.camera-running.has-live-message .generic-reference-thumbnail { display:none }
+.visual-live.camera-running .squat-pose-overlay,
+.visual-live.camera-running .generic-reference-overlay {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+}
+.visual-live.camera-running .camera-stage.mirrored .squat-pose-overlay,
+.visual-live.camera-running .camera-stage.mirrored .generic-reference-overlay { transform:scaleX(-1) }
+.visual-live.camera-running .live-visual-legend,
+.visual-live.camera-running .generic-live-legend,
+.visual-live.camera-running .live-reference-readout,
+.visual-live.camera-running .generic-reference-thumbnail {
+  position:absolute;
+  z-index:3;
+  border:1px solid #d4f3da66;
+  border-radius:13px;
+  background:#09251dd9;
+  color:#fff;
+  box-shadow:0 8px 25px #06181155;
+  backdrop-filter:blur(12px);
+}
+.visual-live.camera-running .live-visual-legend,
+.visual-live.camera-running .generic-live-legend {
+  left:clamp(12px,3vw,34px);
+  bottom:calc(148px + env(safe-area-inset-bottom));
+  max-width:min(58vw,360px);
+  padding:9px 11px;
+  font-size:12px;
+  line-height:1.35;
+}
+.visual-live.camera-running .live-reference-readout {
+  right:clamp(12px,3vw,34px);
+  bottom:calc(146px + env(safe-area-inset-bottom));
+  padding:9px 11px;
+  font-size:12px;
+}
+.visual-live.camera-running .generic-reference-thumbnail {
+  right:clamp(12px,3vw,34px);
+  bottom:calc(141px + env(safe-area-inset-bottom));
+  width:min(155px,31vw);
+  min-height:115px;
+  padding:9px;
+}
+.visual-live.camera-running .generic-reference-pose { display:block; width:100%; height:90px }
+.visual-live.camera-running .generic-reference-thumbnail>span {
+  display:block;
+  color:#d4efdb;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.12em;
+}
+.visual-live.camera-running .generic-reference-thumbnail>small { display:block; color:#ecf9ec; font-size:10px; line-height:1.2 }
+.visual-live.camera-running .generic-reference-thumbnail svg line { stroke:#d2f7a7 }
+.visual-live.camera-running .generic-reference-thumbnail svg circle { fill:#d2f7a7 }
+.visual-live.camera-running .generic-live-legend { display:grid; gap:2px }
+.visual-live.camera-running .generic-live-legend span:nth-child(1) { color:#b9f977 }
+.visual-live.camera-running .generic-live-legend span:nth-child(2) { color:#fff }
+.visual-live.camera-running .generic-live-legend span:nth-child(3) { color:#ff988a }
+.visual-live.camera-running .live-visual-legend { display:grid; gap:3px }
+.visual-live.camera-running .live-visual-legend span { display:flex; align-items:center; gap:6px }
+.visual-live.camera-running .live-visual-swatch { display:inline-block; width:9px; height:9px; flex:none; border-radius:50%; background:#a9f779 }
+.visual-live.camera-running .live-visual-swatch.difference { background:#ff695d }
+.visual-live.camera-running .live-visual-swatch.uncertain { background:#c7d0ca }
+.visual-live.camera-running .live-reference-readout { display:flex; gap:10px; align-items:center }
+.visual-live.camera-running .live-reference-readout span { display:grid; gap:1px }
+.visual-live.camera-running .live-reference-readout strong { font-size:16px; line-height:1 }
+.visual-live.camera-running .live-reference-readout small { color:#d4e9d8; font-size:10px }
+.visual-live.camera-running.orientation-mismatch .live-visual-legend,
+.visual-live.camera-running.orientation-mismatch .generic-live-legend,
+.visual-live.camera-running.orientation-mismatch .live-reference-readout { display:none }
+
+@media(max-width:650px) {
+  .visual-live.camera-running .live-header { gap:8px; padding:calc(11px + env(safe-area-inset-top)) 12px 20px }
+  .visual-live.camera-running .live-header .eyebrow,
+  .visual-live.camera-running .live-side-tag,
+  .visual-live.camera-running .scan-toolbar .secondary-button:last-child { display:none }
+  .visual-live.camera-running .live-header h2 { font-size:18px }
+  .visual-live.camera-running .scan-toolbar { flex-direction:column; gap:4px }
+  .visual-live.camera-running .scan-toolbar .secondary-button { min-height:37px; padding:5px 8px; font-size:10px }
+  .visual-live.camera-running .live-hud,
+  .visual-live.camera-running .live-views:not(.preparing) .live-hud { top:calc(61px + env(safe-area-inset-top)); left:12px; right:12px; grid-template-columns:69px minmax(0,1fr) }
+  .visual-live.camera-running .rep-counter-card,
+  .visual-live.camera-running .live-views:not(.preparing) .rep-counter-card { min-height:67px; padding:7px }
+  .visual-live.camera-running .rep-number,
+  .visual-live.camera-running .live-views:not(.preparing) .rep-number { font-size:33px }
+  .visual-live.camera-running .live-guidance-box,
+  .visual-live.camera-running .live-views:not(.preparing) .live-guidance-box { min-height:67px; padding:9px; gap:6px }
+  .visual-live.camera-running .live-guidance-box p,
+  .visual-live.camera-running .live-views:not(.preparing) .live-guidance-box p { font-size:14px }
+  .visual-live.camera-running .live-visual-legend,
+  .visual-live.camera-running .generic-live-legend { max-width:48vw; font-size:10px }
+  .visual-live.camera-running .live-reference-readout { max-width:39vw; font-size:10px }
+  .visual-live.camera-running .generic-reference-thumbnail { width:105px; min-height:105px }
+  .visual-live.camera-running .generic-reference-pose { height:76px }
+}
+@media(orientation:landscape) and (max-height:600px) {
+  .visual-live.camera-running .live-header { padding-top:6px; padding-bottom:13px }
+  .visual-live.camera-running .live-header h2 { font-size:17px }
+  .visual-live.camera-running .live-side-tag { display:none }
+  .visual-live.camera-running .live-hud,
+  .visual-live.camera-running .live-views:not(.preparing) .live-hud { top:50px; right:12px; left:auto; width:min(46vw,370px) }
+  .visual-live.camera-running .live-setup-guidance {
+    top:50px;
+    left:12px;
+    right:auto;
+    bottom:auto;
+    width:min(44vw,270px);
+    max-height:calc(100dvh - 125px);
+    overflow:auto;
+    padding:10px 12px;
+  }
+  .visual-live.camera-running .live-setup-guidance .eyebrow { display:none }
+  .visual-live.camera-running .live-setup-guidance h3 { font-size:clamp(16px,3vw,21px); line-height:1.15 }
+  .visual-live.camera-running .live-setup-guidance p { font-size:11px }
+  .visual-live.camera-running .live-countdown { font-size:36px; margin-top:2px }
+  .visual-live.camera-running .generic-start-card { bottom:90px; max-width:360px }
+  .visual-live.camera-running .live-visual-legend,
+  .visual-live.camera-running .generic-live-legend,
+  .visual-live.camera-running .live-reference-readout,
+  .visual-live.camera-running .generic-reference-thumbnail { bottom:85px }
+  .visual-live.camera-running .live-more-options,
+  .visual-live.camera-running .camera-underbar { bottom:71px }
+  .visual-live.camera-running .live-bottom-bar { padding-block:7px }
+  .visual-live.camera-running .stop-exercise-btn { min-height:44px }
+  /* On a short horizontal viewport, keep the body and the finish control visible. */
+  .visual-live.camera-running .live-visual-legend,
+  .visual-live.camera-running .generic-live-legend,
+  .visual-live.camera-running .live-reference-readout,
+  .visual-live.camera-running .generic-reference-thumbnail { display:none }
+}
+@media(orientation:portrait) and (max-height:560px) {
+  .visual-live.camera-running .live-visual-legend,
+  .visual-live.camera-running .generic-live-legend,
+  .visual-live.camera-running .live-reference-readout { display:none }
+  .visual-live.camera-running .generic-reference-thumbnail { bottom:calc(125px + env(safe-area-inset-bottom)); min-height:84px }
+  .visual-live.camera-running .generic-reference-pose { height:55px }
+}
+.library-filters { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:18px 0 24px; }
+.library-filters label { display:flex; flex-direction:column; gap:6px; font-size:13px; min-width:0; }
+.library-filters .library-search { grid-column:1 / -1; }
+.library-filters input, .library-filters select { width:100%; min-width:0; min-height:44px; padding:10px 12px; border:1px solid #ced8c9; border-radius:12px; background:#fff; color:#204b3d; font:inherit; }
+.library-filters p { grid-column:1 / -1; margin:0; font-size:12px; }
+.delete-confirmation { flex:1 1 100%; padding:14px; border:1px solid #d8b3a8; border-radius:14px; background:#fff7f3; min-width:0; text-align:left; }
+.delete-confirmation p { margin:0 0 12px; color:#694438; font-size:14px; overflow-wrap:anywhere; }
+.delete-confirmation-actions { display:flex; flex-wrap:wrap; gap:10px; }
+.delete-confirmation-actions button { flex:1; min-height:44px; }
+.delete-confirmation .delete-confirm-button { background:#923e2b; border-color:#923e2b; color:#fff; }
+.session-history > .card-heading { flex-wrap:wrap; }
+
+/* Video and SVG use the same centered cover/contain transform. */
+.visual-live.camera-running.fill-camera .camera-stage video,
+.body-scan-dialog.camera-running.fill-camera .camera-stage video { object-fit:cover }
+.camera-framing { display:grid; gap:7px; padding:12px 0; font-size:13px }
+.camera-framing select { width:100%; min-height:44px; padding:8px; border:1px solid #bdcfbf; border-radius:9px; background:#f6faf2; color:#173e2d }
+.camera-framing small { font-size:12px; line-height:1.4 }
+.generic-measured-bones { filter:drop-shadow(0 1px 2px #001b12) }
+
+/* Body setup shares the full viewport camera canvas with live exercise. */
+.body-scan-dialog.camera-running { display:block; padding:0; overflow:hidden; isolation:isolate; background:#081712; color:#fff }
+.body-scan-dialog.camera-running .body-scan-views,
+.body-scan-dialog.camera-running .scan-camera-area,
+.body-scan-dialog.camera-running .camera-stage,
+.body-scan-dialog.camera-running .camera-stage.natural-preview {
+  position:absolute; inset:0; width:100%; height:100%; min-height:0; max-height:none; margin:0; border-radius:0; display:block;
+}
+.body-scan-dialog.camera-running .body-scan-header {
+  position:absolute; z-index:3; top:0; left:0; right:0; padding:calc(12px + env(safe-area-inset-top)) 16px 22px;
+  background:linear-gradient(#051912ed,#0519128c,transparent); align-items:flex-start; gap:10px;
+}
+.body-scan-dialog.camera-running .body-scan-header h2 { font-size:20px; color:#fff }
+.body-scan-dialog.camera-running .body-scan-header .eyebrow { display:none }
+.body-scan-dialog.camera-running .scan-toolbar { flex-direction:row; flex-wrap:wrap; justify-content:flex-end; gap:6px }
+.body-scan-dialog.camera-running .scan-toolbar button { min-height:42px; padding:7px 10px; font-size:12px }
+.body-scan-dialog.camera-running .body-scan-guidance {
+  position:absolute; z-index:2; top:calc(82px + env(safe-area-inset-top)); left:14px; right:14px;
+  max-width:600px; padding:14px; margin:0; border:1px solid #e5f7df55; border-radius:16px; background:#09251dd9; color:#fff;
+  max-height:30dvh; overflow:auto; backdrop-filter:blur(10px);
+}
+.body-scan-dialog.camera-running .body-scan-guidance h3 { font-size:clamp(22px,4vw,34px); color:#fff }
+.body-scan-dialog.camera-running .body-scan-guidance p { font-size:15px; color:#e9f5e7; margin:8px 0 }
+.body-scan-dialog.camera-running .scan-progress { margin-top:8px; gap:7px }
+.body-scan-dialog.camera-running .scan-progress strong { font-size:25px; color:#bcf391 }
+.body-scan-dialog.camera-running .scan-progress span { font-size:11px; color:#deecd9 }
+.body-scan-dialog.camera-running .scan-bottom {
+  position:absolute; z-index:4; bottom:0; left:0; right:0; padding:12px max(14px,calc((100vw - 580px)/2)) calc(12px + env(safe-area-inset-bottom));
+  background:linear-gradient(transparent,#051912e8 20%); display:flex; flex-direction:column; gap:8px;
+}
+.body-scan-dialog.camera-running #calibration-purpose { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%) }
+.body-scan-dialog.camera-running .scan-bottom .template-actions { position:static; padding:0; background:none; border:0; margin:0; order:2 }
+.body-scan-dialog.camera-running .scan-bottom .scan-settings { background:#103a2feb; color:#fff; max-height:40dvh; overflow:auto }
+.body-scan-dialog.camera-running .scan-bottom .scan-settings>summary,
+.body-scan-dialog.camera-running .scan-bottom .scan-settings :is(label,p,small) { color:#e5f6e5 }
+.body-scan-dialog.camera-running .scan-bottom .scan-settings[open] { padding-bottom:10px }
+.body-scan-dialog.camera-running .scan-bottom .message { margin:0; max-height:22dvh; overflow:auto; background:#fff5ed; color:#54240e }
+.body-scan-dialog.camera-running .camera-orientation-tip { position:absolute; z-index:5; bottom:145px; left:14px; right:14px; max-height:30dvh; overflow:auto; background:#edf6e6; color:#173e2d }
+@media(max-width:380px) {
+  .body-scan-dialog.camera-running .body-scan-header h2 { font-size:16px }
+  .body-scan-dialog.camera-running .scan-toolbar button { padding:5px 7px; font-size:11px }
+}
+@media(orientation:landscape) and (max-height:600px) {
+  .body-scan-dialog.camera-running .body-scan-guidance { top:66px; width:43%; right:auto; max-height:calc(100dvh - 90px); padding:10px }
+  .body-scan-dialog.camera-running .body-scan-guidance h3 { font-size:21px }
+  .body-scan-dialog.camera-running .scan-bottom { left:49%; padding:8px 12px; }
+  .body-scan-dialog.camera-running .scan-bottom .scan-settings { max-height:55dvh }
+}
+
+/* Duration needs room for decimals without covering the camera guidance. */
+.static-live-dialog.visual-live.camera-running .live-views:not(.preparing) .live-hud { grid-template-columns:100px minmax(0,1fr) }
+.static-live-dialog.visual-live.camera-running .live-views:not(.preparing) .rep-number { font-size:28px; font-variant-numeric:tabular-nums }
+
+/* Camera controls occupy one bottom row. Settings use the browser's modal layer,
+   so notices and skeleton overlays cannot cover a control or intercept a tap. */
+.camera-options-position { position:absolute; z-index:9; left:14px; bottom:calc(14px + env(safe-area-inset-bottom)); width:calc(44% - 20px) }
+.camera-options-button { width:100%; min-height:50px; padding:10px; border:1px solid #9cb6a9; border-radius:14px; background:#193d31; color:#fff; font:inherit; font-size:14px; font-weight:650 }
+.camera-settings-sheet { box-sizing:border-box; width:min(100% - 24px,520px); max-width:none; max-height:calc(100dvh - 32px); padding:0; border:1px solid #d4dfd4; border-radius:20px; background:#f6f8f2; color:#193d31; box-shadow:0 20px 80px #0007; overflow:auto; overscroll-behavior:contain }
+.camera-settings-sheet::backdrop { background:#071b14b8; backdrop-filter:blur(5px) }
+.camera-settings-sheet>header { position:sticky; top:0; z-index:2; display:flex; justify-content:space-between; align-items:center; gap:12px; padding:16px; background:#f6f8f2; border-bottom:1px solid #d4dfd4 }
+.camera-settings-sheet>header h3 { margin:0; font-size:20px; color:#193d31 }
+.camera-settings-sheet>header button { min-height:44px; padding:8px 16px }
+.camera-settings-content { padding:8px 18px 24px; text-align:left }
+.camera-settings-content :is(p,small,label,span,summary) { color:#284e3d!important; overflow-wrap:anywhere }
+.camera-settings-content :is(button,select,summary) { min-height:44px }
+.camera-settings-content>details { padding:14px 0; border:0; border-top:1px solid #d4dfd4; border-radius:0; background:none }
+.camera-settings-content .angles-card { display:block!important }
+.camera-settings-content .camera-settings-notice { padding:12px; background:#fff1d9; border-radius:10px; font-size:14px; line-height:1.5 }
+.camera-settings-content .mirror-option { display:flex; align-items:center; min-height:44px; gap:10px }
+.visual-live.camera-running .live-bottom-bar { display:grid; grid-template-columns:44% minmax(0,1fr); gap:10px; padding:14px 14px calc(14px + env(safe-area-inset-bottom)) }
+.visual-live.camera-running .stop-exercise-btn { grid-column:2; min-width:0; font-size:14px; padding:10px }
+.visual-live.camera-running .camera-underbar,
+.visual-live.camera-running .generic-live-legend,
+.visual-live.camera-running .live-visual-legend,
+.visual-live.camera-running .live-reference-readout { display:none }
+.visual-live.camera-running .live-header { padding:12px 14px; padding-top:calc(12px + env(safe-area-inset-top)); min-height:64px; gap:10px }
+.visual-live.camera-running .live-header h2 { font-size:19px; margin:0 }
+.visual-live.camera-running .live-header .eyebrow,
+.visual-live.camera-running .live-side-tag { display:none }
+.visual-live.camera-running .live-header .scan-toolbar button { min-height:44px; padding:8px 12px; font-size:13px }
+.visual-live.camera-running .live-hud,
+.visual-live.camera-running .live-views:not(.preparing) .live-hud { top:calc(78px + env(safe-area-inset-top)); left:12px; right:12px; width:auto; grid-template-columns:64px minmax(0,1fr); gap:8px }
+.visual-live.camera-running .rep-counter-card,
+.visual-live.camera-running .live-views:not(.preparing) .rep-counter-card { min-width:0; padding:8px 4px; min-height:64px }
+.visual-live.camera-running .hud-label { font-size:9px; letter-spacing:.04em; overflow-wrap:anywhere }
+.visual-live.camera-running .rep-number,
+.visual-live.camera-running .live-views:not(.preparing) .rep-number { font-size:30px }
+.visual-live.camera-running .live-guidance-box,
+.visual-live.camera-running .live-views:not(.preparing) .live-guidance-box { min-width:0; min-height:64px; padding:10px; max-height:25dvh; overflow:auto; pointer-events:auto }
+.visual-live.camera-running .live-guidance-box p,
+.visual-live.camera-running .live-views:not(.preparing) .live-guidance-box p { font-size:14px; margin:0; line-height:1.35 }
+.visual-live.camera-running .guidance-indicator { display:none }
+.visual-live.camera-running .generic-reference-thumbnail { bottom:calc(90px + env(safe-area-inset-bottom)); right:12px; left:auto; width:100px; min-height:0; padding:8px }
+.visual-live.camera-running .generic-reference-pose { height:70px }
+.visual-live.camera-running>.message { bottom:calc(88px + env(safe-area-inset-bottom)); max-height:25dvh; overflow:auto; font-size:14px }
+.body-scan-dialog.camera-running .scan-bottom .template-actions { padding-left:44%; min-height:50px }
+.body-scan-dialog.camera-running .scan-bottom .template-actions button { width:100%; min-height:50px; font-size:14px }
+.body-scan-dialog.camera-running .scan-bottom .camera-options-position { bottom:calc(12px + env(safe-area-inset-bottom)) }
+@media(orientation:landscape) and (max-height:600px) {
+  .visual-live.camera-running .live-hud,
+  .visual-live.camera-running .live-views:not(.preparing) .live-hud { top:64px; left:auto; right:12px; width:44%; max-height:calc(100dvh - 150px) }
+  .visual-live.camera-running .generic-reference-thumbnail { display:none }
+  .camera-settings-sheet { max-height:calc(100dvh - 16px) }
+  .body-scan-dialog.camera-running .scan-bottom { left:0 }
+}
+
+/* Placement is instructional artwork, not a detected body or acceptance signal. */
+.camera-placement-guide { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:1 }
+.camera-placement-guide .body-ghost { fill:#c5f7d324; stroke:#c7f7d6b8; stroke-width:2; stroke-dasharray:8 6 }
+.camera-placement-guide .reference-ghost { fill:#c5f7d329; stroke:#c7f7d675; stroke-linecap:round; stroke-linejoin:round }
+.camera-placement-guide .placement-floor { fill:none; stroke-width:3 }
+.camera-stage.mirrored .camera-placement-guide { transform:scaleX(-1) }
+.camera-preparing-badge {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: rgba(20, 61, 52, 0.94);
+  border: 1px solid rgba(199, 247, 214, 0.45);
+  border-radius: 999px;
+  color: #effcf3;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+  max-width: 90%;
+  white-space: nowrap;
+  text-align: center;
+}
+.preparing-spinner {
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-top-color: #55f096;
+  border-radius: 50%;
+  animation: prep-spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes prep-spin {
+  to { transform: rotate(360deg); }
+}
+.camera-recovery { position:absolute; z-index:6; bottom:calc(88px + env(safe-area-inset-bottom)); left:12px; right:12px; max-width:520px; margin:auto; padding:12px; border:1px solid #cee6d177; border-radius:14px; background:#173e30f2; color:#fff; font-size:13px }
+.camera-recovery p { margin:5px 0 10px; color:#dfefdf; line-height:1.4 }
+.camera-recovery>div { display:flex; gap:8px }
+.camera-recovery button { flex:1; min-height:44px; padding:8px; border:1px solid #b8d5bd; border-radius:10px; background:#eff7e9; color:#183d2c; font:inherit; font-weight:650 }
+@media(orientation:landscape) and (max-height:600px) {
+  .camera-recovery { left:12px; right:auto; width:43%; max-height:calc(100dvh - 145px); overflow:auto }
+}
+
+/* Keep instructional shadows legible on a bright wall or a patterned background. */
+.camera-placement-guide { filter:drop-shadow(0 2px 2px #001d17) }
+.camera-placement-guide .body-ghost { fill:#b8f2ce40; stroke:#e6ffef; stroke-width:3; stroke-dasharray:7 5 }
+.camera-placement-guide .reference-ghost { stroke:#c5f7d6a8 }
+.camera-source-info { font-size:12px; font-variant-numeric:tabular-nums }
+
+/* The destination stays visible while the camera overlay compares the current pose. */
+.generic-teaching-intro { display:grid; grid-template-columns:170px minmax(0,1fr); gap:24px; align-items:center; padding:24px; background:#f3f6eb; border-radius:20px; margin:16px 0 }
+.generic-teaching-intro h3 { margin:4px 0 16px; font-size:24px }
+.generic-teaching-intro ol { padding-left:22px; margin:0; line-height:1.55 }
+.generic-teaching-intro li { margin-bottom:12px; padding-left:4px }
+.generic-teaching-intro p { line-height:1.5; font-size:14px }
+.generic-movement-guide { box-sizing:border-box; display:flex; flex-direction:column; align-items:center; gap:7px; padding:12px; border-radius:16px; background:#fffaf0; color:#203d30; border:1px solid #e3d7bb; box-shadow:0 4px 18px #0002 }
+.generic-movement-guide strong { text-align:center; font-size:11px; letter-spacing:.03em }
+.generic-movement-guide svg { display:block; width:100%; height:130px }
+.generic-movement-guide span { font-size:11px; text-align:center }
+.generic-movement-guide button { width:100%; min-height:44px; border:1px solid #b8c9b5; border-radius:10px; background:#ecf2e2; color:#203d30; font:inherit; font-size:12px; font-weight:650; cursor:pointer }
+.generic-voice-intro { margin:16px 0; padding:16px; border-radius:14px; background:#edf3e6; color:#203d30 }
+.generic-voice-intro p { font-size:14px; line-height:1.45; margin:8px 0 }
+.generic-voice-intro .voice-privacy { font-size:12px; color:#526452 }
+.repetition-goal-setup { margin:16px 0; padding:16px; border:1px solid #c5d6c2; border-radius:14px }
+.repetition-goal-setup legend { font-weight:750; color:#244b38; padding:0 6px }
+.repetition-goal-setup>div { display:grid; grid-template-columns:1fr 1fr; gap:12px }
+.repetition-goal-setup label { display:grid; gap:7px; font-size:14px; font-weight:650 }
+.repetition-goal-setup select { width:100%; min-height:46px; border:1px solid #9eaf9b; border-radius:9px; background:#fff; color:#203d30; padding:8px; font:inherit }
+.repetition-goal-setup p { font-size:13px; line-height:1.5; margin:12px 0 0; color:#526452 }
+.visual-live.camera-running .repetition-goal-counter { gap:3px }
+.repetition-goal-counter .rep-number { white-space:nowrap; font-variant-numeric:tabular-nums }
+.repetition-goal-counter .rep-number small { font-size:.42em; opacity:.85; margin-left:2px }
+.rep-counted { animation:rep-counted .55s ease-out }
+@keyframes rep-counted { from { transform:scale(1.2); color:#e7ff89 } to { transform:scale(1) } }
+@media(prefers-reduced-motion:reduce) { .rep-counted { animation:none } }
+.workout-goal-result { margin-bottom:16px; padding:16px; border:1px solid #bacfae; border-radius:14px; background:#edf4e5; color:#244b38 }
+.workout-goal-result strong { font-size:20px }
+.workout-goal-result p { margin:6px 0 0 }
+.voice-start-actions { display:grid; gap:8px; margin-bottom:16px }
+.generic-voice-status { position:absolute; z-index:6; bottom:calc(77px + env(safe-area-inset-bottom)); left:12px; right:12px; display:flex; align-items:center; gap:8px; justify-content:space-between; padding:6px 8px; border-radius:10px; background:#18382cf2; color:#f7ffed; font-size:11px }
+.generic-voice-status span { max-height:46px; overflow:auto }
+.generic-voice-status button { flex-shrink:0; min-height:32px; border:1px solid #aec7a3; border-radius:7px; background:transparent; color:inherit; font:inherit; padding:4px 8px; cursor:pointer }
+.visual-live.camera-running .generic-movement-guide { position:absolute; z-index:4; right:12px; bottom:calc(90px + env(safe-area-inset-bottom)); width:148px; pointer-events:auto }
+.generic-live-dialog.visual-live.camera-running .generic-movement-guide { bottom:calc(133px + env(safe-area-inset-bottom)) }
+.visual-live.camera-running .generic-movement-guide svg { height:110px }
+.visual-live.camera-running .coaching-measurement { display:block; font-size:11px; font-weight:400; margin-top:7px; opacity:.85 }
+.visual-live.camera-running .live-guidance-box p { font-size:17px; font-weight:650 }
+@media(max-width:600px) {
+  .generic-teaching-intro { grid-template-columns:1fr; gap:18px; padding:18px }
+  .generic-teaching-intro .movement-preview { width:100%; display:grid; grid-template-columns:120px minmax(0,1fr); gap:8px 14px }
+  .generic-teaching-intro .movement-preview svg { grid-row:1/4; grid-column:1; height:140px }
+  .generic-teaching-intro .movement-preview strong,.generic-teaching-intro .movement-preview span,.generic-teaching-intro .movement-preview button { grid-column:2 }
+}
+@media(max-height:650px) {
+  .visual-live.camera-running .generic-movement-guide { width:126px; gap:4px; padding:8px }
+  .visual-live.camera-running .generic-movement-guide svg { height:76px }
+  .visual-live.camera-running .generic-movement-guide span { display:none }
+}
+@media(orientation:landscape) and (max-height:600px) {
+  .visual-live.camera-running .generic-movement-guide { right:auto; left:12px; bottom:82px; width:126px }
+}
+
+/* Readable at a distance: one large state, one action, and a distinct repetition counter. */
+.distance-coach.camera-running { --coach-accent:#efdbc1; --coach-surface:#302d28 }
+.distance-coach.camera-running[data-coach-tone="ready"] { --coach-accent:#9ddbf8; --coach-surface:#123c50 }
+.distance-coach.camera-running[data-coach-tone="matching"] { --coach-accent:#b5f68c; --coach-surface:#143c27 }
+.distance-coach.camera-running[data-coach-tone="different"] { --coach-accent:#ffc67e; --coach-surface:#663113 }
+.distance-coach.camera-running::after { content:""; position:absolute; inset:0; z-index:7; border:6px solid var(--coach-accent); border-radius:inherit; pointer-events:none }
+.distance-coach.generic-live-dialog.visual-live.camera-running .live-hud,
+.distance-coach.generic-live-dialog.visual-live.camera-running .live-views:not(.preparing) .live-hud { grid-template-columns:78px minmax(0,1fr); gap:8px; top:calc(58px + env(safe-area-inset-top)); left:12px; right:12px; align-items:stretch }
+.distance-coach.generic-live-dialog.visual-live.camera-running .rep-counter-card { padding:8px 6px; background:#112b22ea; border:1.5px solid #d8f6c9; border-radius:14px; min-height:unset; display:flex; flex-direction:column; justify-content:center; align-items:center; box-shadow:0 4px 16px rgba(0,0,0,0.22) }
+.distance-coach.generic-live-dialog.visual-live.camera-running .rep-number { font-size:38px; line-height:1 }
+.distance-coach.generic-live-dialog.visual-live.camera-running .hud-label { font-size:10px; font-weight:800; letter-spacing:.04em; opacity:.9 }
+.distance-coach.generic-live-dialog.visual-live.camera-running .live-guidance-box { padding:8px 12px; max-height:18dvh; min-height:unset; background:var(--coach-surface); border:1.5px solid var(--coach-accent); border-radius:14px; display:flex; flex-direction:column; justify-content:center; box-shadow:0 4px 16px rgba(0,0,0,0.22); backdrop-filter:blur(10px) }
+.distance-status-heading { display:flex; align-items:center; gap:6px; color:var(--coach-accent); margin-bottom:2px }
+.distance-status-heading strong { font-size:clamp(12px,3.3vw,15px); line-height:1.15; letter-spacing:.02em; overflow-wrap:normal }
+.live-accuracy-pill { display:inline-flex; align-items:center; padding:2px 7px; border-radius:999px; font-size:11px; font-weight:700; letter-spacing:.02em; margin-left:auto; flex-shrink:0 }
+.live-accuracy-pill.good { background:rgba(181,246,140,0.25); color:#b5f68c; border:1px solid rgba(181,246,140,0.6) }
+.live-accuracy-pill.medium { background:rgba(255,198,126,0.25); color:#ffc67e; border:1px solid rgba(255,198,126,0.6) }
+.live-accuracy-pill.poor { background:rgba(255,120,120,0.25); color:#ff9898; border:1px solid rgba(255,120,120,0.6) }
+.distance-status-symbol { flex-shrink:0; font-weight:900; font-size:16px; line-height:1 }
+.distance-coach.generic-live-dialog.visual-live.camera-running .live-guidance-box p { font-size:clamp(13px,3.6vw,16px); font-weight:650; line-height:1.25; margin:0 }
+.distance-status-scope { display:block; margin-top:3px; font-size:10px; line-height:1.2; color:#ecf3dfcc }
+.distance-coach.generic-live-dialog.visual-live.camera-running .generic-live-legend { display:none }
+.distance-coach.generic-live-dialog.visual-live.camera-running .generic-voice-status { left:12px; right:12px; bottom:calc(64px + env(safe-area-inset-bottom)); font-size:12px; padding:4px 10px; min-height:32px; background:rgba(14,34,25,0.88); border:1px solid rgba(255,255,255,0.18); border-radius:999px; display:flex; align-items:center; justify-content:space-between; backdrop-filter:blur(8px) }
+.distance-coach.generic-live-dialog.visual-live.camera-running .generic-voice-status button { min-height:26px; padding:2px 10px; font-size:11px; border-radius:999px }
+.camera-demo-toggle { position:absolute; right:12px; bottom:calc(104px + env(safe-area-inset-bottom)); z-index:6; background:rgba(18,44,34,0.88); color:#f4faee; border:1px solid rgba(246,255,224,0.4); border-radius:999px; padding:5px 12px; font-size:12px; font-weight:600; cursor:pointer; backdrop-filter:blur(8px); box-shadow:0 2px 10px rgba(0,0,0,0.3) }
+.demo-guide-overlay { position:absolute; top:calc(65px + env(safe-area-inset-top)); right:12px; width:min(240px,62vw); z-index:10; background:rgba(255,250,240,0.96); border:2px solid #e4cf9c; border-radius:16px; padding:10px; box-shadow:0 8px 32px rgba(0,0,0,0.35); backdrop-filter:blur(12px) }
+.demo-guide-close { position:absolute; top:6px; right:8px; width:24px; height:24px; border-radius:50%; border:none; background:rgba(0,0,0,0.12); color:#1a3c27; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; cursor:pointer }
+.demo-guide-overlay .generic-movement-guide { position:static; width:100%; padding:0; border:none; background:transparent; box-shadow:none }
+.demo-guide-overlay .generic-movement-guide svg { height:clamp(120px,18dvh,180px) }
+.distance-coach .camera-placement-guide .body-ghost { fill:#fff3d24d; stroke:#fff6df; stroke-width:4; stroke-dasharray:none }
+.distance-coach .camera-placement-guide .reference-ghost { stroke:#fff1c4d9; fill:#fff1c4a3 }
+.distance-coach .camera-placement-guide .reference-torso { fill:#fff1c480 }
+.screen-awake-option { display:flex; gap:9px; align-items:center; margin:12px 0; font-size:14px }
+@media(max-height:700px) {
+  .distance-coach.generic-live-dialog.visual-live.camera-running .live-hud { grid-template-columns:72px minmax(0,1fr); gap:6px }
+  .distance-coach.generic-live-dialog.visual-live.camera-running .rep-counter-card { padding:5px }
+  .distance-coach.generic-live-dialog.visual-live.camera-running .rep-number { font-size:32px }
+  .distance-coach.generic-live-dialog.visual-live.camera-running .live-guidance-box { padding:6px 10px; max-height:16dvh }
+  .distance-coach .distance-status-heading { margin-bottom:2px }
+  .distance-coach .distance-status-heading strong { font-size:13px }
+  .distance-coach.generic-live-dialog.visual-live.camera-running .live-guidance-box p { font-size:13px }
+  .distance-coach .distance-status-scope { display:none }
+}
+@media(orientation:landscape) and (max-height:600px) {
+  .distance-coach.generic-live-dialog.visual-live.camera-running .live-hud,
+  .distance-coach.generic-live-dialog.visual-live.camera-running .live-views:not(.preparing) .live-hud { top:70px; left:50%; right:16px; width:auto; grid-template-columns:70px minmax(0,1fr) }
+  .distance-coach.generic-live-dialog.visual-live.camera-running .live-guidance-box { max-height:calc(100dvh - 215px) }
+  .demo-guide-overlay { top:74px; left:16px; right:auto; width:calc(45% - 16px) }
+}
+
+.report-conclusion,.attempt-report-card { padding:18px; margin:16px 0; border:1px solid #cbd9c7; border-radius:16px; background:#f0f5e9; color:#183e31 }
+.report-conclusion h3,.attempt-report-card h3 { font-size:21px; margin:0 0 10px }
+.report-conclusion p,.attempt-report-card p { font-size:15px; line-height:1.55; margin:8px 0 }
+.attempt-report-text { white-space:pre-wrap; overflow-wrap:anywhere; font:inherit; font-size:14px; max-height:55dvh; overflow:auto; padding:12px; background:#fff; border-radius:10px }
+.session-summary li { line-height:1.5; margin-bottom:7px }
+
+/* The first report screen is a short coaching review; diagnostic counters stay expandable. */
+.review-eyebrow { font-size:12px!important; font-weight:800; letter-spacing:.12em }
+.review-card { margin:14px 0; padding:18px; border:1px solid #d8dfd5; border-radius:16px; background:#fff; color:#183e31 }
+.review-card h4 { margin:0 0 10px; font-size:18px }
+.review-card p { margin:8px 0 0; line-height:1.6; font-size:16px }
+.review-card ul,.review-card ol { margin:0; padding-left:22px }
+.review-focus { background:#fff8e9; border-color:#e6d5ae }
+.review-next { background:#e9f3e7; border-left:5px solid #326449 }
+.review-technical { margin:18px 0; padding:14px; border:1px solid #d8dfd5; border-radius:12px; overflow-wrap:anywhere }
+.review-technical summary { cursor:pointer; font-weight:700; line-height:1.5 }
+
+/* Distance coaching: keep the main instruction readable and the example below it. */
+.camera-angle-intro { padding:16px 20px; margin:12px 0; border:1px solid #c8d6c5; border-radius:16px; background:#f2f6ed; color:#203d30 }
+.camera-angle-intro strong { font-size:18px }
+.camera-angle-intro p { line-height:1.5; margin:8px 0 }
+.camera-angle-intro small { display:block; line-height:1.5; color:#4d6355 }
+.camera-setup-progress { grid-column:1 / -1; padding:8px 12px; background:#142d25ed; border:1px solid #ffffff40; border-radius:12px; color:#f6f7ee }
+.camera-setup-progress ol,.camera-setup-progress ul { list-style:none; display:flex; justify-content:space-between; gap:8px; margin:0; padding:0 }
+.camera-setup-progress ol { font-size:12px; font-weight:650 }
+.camera-setup-progress ol li { opacity:.65 }
+.camera-setup-progress ol li[aria-current] { opacity:1; color:#fff0b8; text-decoration:underline; text-underline-offset:4px }
+.camera-setup-progress ol li[data-complete="true"] { opacity:1; color:#b5f68c }
+.camera-setup-progress ul { border-top:1px solid #ffffff30; margin-top:8px; padding-top:7px; font-size:12px }
+.camera-setup-progress ul li[data-visible="true"] { color:#b5f68c }
+.distance-coach.generic-live-dialog.visual-live.camera-running .live-guidance-box { max-height:none }
+.distance-coach.generic-live-dialog.visual-live.camera-running .live-guidance-box p { font-size:clamp(17px,4.6vw,22px); line-height:1.3 }
+.distance-coach .distance-status-heading { flex-wrap:wrap }
+.distance-coach .distance-status-heading strong { font-size:14px }
+.distance-coach .live-accuracy-pill { font-size:10px; margin-left:0 }
+.distance-coach .demo-guide-overlay { top:auto; bottom:calc(112px + env(safe-area-inset-bottom)); width:150px; z-index:6; padding:8px }
+.distance-coach.generic-live-dialog.visual-live.camera-running .demo-guide-overlay .generic-movement-guide { position:static; width:100%; padding:0; gap:5px }
+.distance-coach.generic-live-dialog.visual-live.camera-running .demo-guide-overlay .generic-movement-guide svg { height:90px }
+.distance-coach .demo-guide-overlay .generic-movement-guide strong { align-self:flex-start; max-width:100px; min-height:30px; text-align:left }
+.distance-coach .demo-guide-overlay .generic-movement-guide span { display:none }
+.distance-coach .demo-guide-close { top:2px; right:2px; width:44px; height:44px; font-size:18px }
+@media(max-height:700px) {
+  .distance-coach.generic-live-dialog.visual-live.camera-running .live-guidance-box p { font-size:16px }
+  .camera-setup-progress { padding:6px 10px }
+  .distance-coach.generic-live-dialog.visual-live.camera-running .demo-guide-overlay .generic-movement-guide svg { height:64px }
+}
+@media(orientation:landscape) and (max-height:600px) {
+  .distance-coach .demo-guide-overlay { top:74px; bottom:auto; left:16px; right:auto; width:150px }
+}
+.camera-setup-progress .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0 }

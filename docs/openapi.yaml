@@ -1,0 +1,36 @@
+openapi: 3.1.0
+info:
+  title: FlexiVision API scaffold
+  version: 0.1.0
+  description: Health and capabilities only. No analysis, storage or video upload endpoints yet.
+servers:
+  - url: http://127.0.0.1:3001
+paths:
+  /healthz:
+    get:
+      responses:
+        '200':
+          description: API process is available, not model readiness.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status: { const: ok }
+  /api/v1/capabilities:
+    get:
+      responses:
+        '200':
+          description: Actual implemented capabilities.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [contractVersion, referenceAnalysis, liveComparison, rawVideoUpload, feedbackIntervalMs]
+                properties:
+                  contractVersion: { const: 1 }
+                  referenceAnalysis: { const: unavailable }
+                  liveComparison: { const: unavailable }
+                  rawVideoUpload: { const: false }
+                  feedbackIntervalMs: { const: 10000 }
